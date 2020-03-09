@@ -34,14 +34,16 @@ def svm_loss_naive(W, X, y, reg):
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
+        dW[:,j]  += X[i,:]
+        dW[:,y[i]] -= X[i,:]
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
-
+  dW /= num_train
   # Add regularization to the loss.
   loss += reg * np.sum(W * W)
-
+  dW += reg * 2 * W
   #############################################################################
   # TODO:                                                                     #
   # Compute the gradient of the loss function and store it dW.                #
@@ -69,7 +71,24 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  y_score = scores[range(X.shape[0]),y].reshape(-1,1)
+  tmp = scores + 1 - y_score
+  tmp[range(X.shape[0]),y] = 0
+  margins = np.maximum(0, tmp)
+  loss += np.mean(np.sum(margins, axis = 1)) #loss data part.
+#loss += np.mean(margins)
+  loss += reg * np.sum(W*W)
+#loss /= X.shape[0]
+  indicator = margins
+  indicator[margins > 0] = 1
+  sum_score = np.sum(indicator, axis = 1)
+  indicator[range(X.shape[0]),y] -= sum_score
+
+  dW += np.dot(X.T, indicator)
+  dW /= X.shape[0]
+
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -84,7 +103,7 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################

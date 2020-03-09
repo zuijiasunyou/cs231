@@ -22,14 +22,19 @@ def softmax_loss_naive(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
-
+  print("W shape", W.shape)
+  print("X shape", X.shape)
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  
+
+  
+  
+  
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -46,14 +51,36 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
-
+  scores = X.dot(W)
+  exp_scores = np.exp(scores)
+  probabilities = exp_scores / np.sum(exp_scores, axis = 1).reshape(-1, 1)
+  
+  s = np.matmul(X, W)  #X(500,m)  W(m,10)  s(500 , 10)
+  es = np.exp(s)
+  sum_es = np.sum(es, axis = 1, keepdims = True)
+  esi = es[y.reshape((-1,1))]
+  loss = np.mean(- np.log(esi/sum_es)) + reg*np.sum(np.square(W))
+  
+  ############ Compute dW #########################
+  # transfer y
+  #y = y.reshape(-1,1)
+  ynew = np.zeros((X.shape[0], W.shape[1])) #ynew (500,10)
+  
+  ynew[range(X.shape[0]),y] = 1
+  #print(y[0:5],ynew[0:5])
+  term1 = X.T.dot(ynew) #(m, 500) (500,10) => (m,10)
+  
+  #term2 = X.T.dot(es/sum_es)
+  term2 = X.T.dot(probabilities)
+  
+  dW = -(term1 - term2)/X.shape[0] + 2*reg*W
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
